@@ -9,7 +9,7 @@ $(document).ready(function() {
         };
 
         $.ajax({
-            url: 'http://localhost:8080/auth/login',
+            url: 'http://localhost:8080/login',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(authData),
