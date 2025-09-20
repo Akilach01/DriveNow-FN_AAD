@@ -1,4 +1,4 @@
-// DriveNow App - Global Utilities (Updated for your DTOs)
+
 const APP_CONFIG = {
     apiBase: '/api',
     defaultImage: '/images/default-car.jpg'
