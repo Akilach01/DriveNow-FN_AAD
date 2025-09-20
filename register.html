@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - DriveNow</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="/css/custom.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container">
+  <div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <div class="text-center mb-4">
+            <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+            <h2 class="text-primary">Create Account</h2>
+            <p class="text-muted">Join DriveNow today</p>
+          </div>
+
+          <form id="registerForm" novalidate>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="firstName" class="form-label">First Name *</label>
+                <input type="text" class="form-control" id="firstName"
+                       name="firstName" required>
+                <div class="invalid-feedback">Please enter your first name</div>
+              </div>
+              <div class="col-md-6">
+                <label for="lastName" class="form-label">Last Name *</label>
+                <input type="text" class="form-control" id="lastName"
+                       name="lastName" required>
+                <div class="invalid-feedback">Please enter your last name</div>
+              </div>
+
+              <div class="col-12">
+                <label for="email" class="form-label">Email *</label>
+                <input type="email" class="form-control" id="email"
+                       name="email" required>
+                <div class="invalid-feedback">Please enter a valid email address</div>
+              </div>
+
+              <div class="col-12">
+                <label for="userName" class="form-label">Username *</label>
+                <input type="text" class="form-control" id="userName"
+                       name="userName" required minlength="3">
+                <div class="invalid-feedback">Username must be at least 3 characters</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="password" class="form-label">Password *</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="password"
+                         name="password" required minlength="6">
+                  <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+                <div class="form-text">Minimum 6 characters</div>
+                <div class="invalid-feedback">Password must be at least 6 characters</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="confirmPassword" class="form-label">Confirm Password *</label>
+                <input type="password" class="form-control" id="confirmPassword"
+                       name="confirmPassword" required>
+                <div class="invalid-feedback">Passwords do not match</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="contact" class="form-label">Contact Number *</label>
+                <input type="tel" class="form-control" id="contact"
+                       name="contact" required pattern="\\+?\\d{10,15}">
+                <div class="form-text">Format: +94712345678</div>
+                <div class="invalid-feedback">Please enter a valid phone number</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="nicNo" class="form-label">NIC Number *</label>
+                <input type="text" class="form-control" id="nicNo"
+                       name="nicNo" required pattern="\\d{9}V|\\d{12}">
+                <div class="form-text">Format: 123456789V or 123456789012</div>
+                <div class="invalid-feedback">Please enter a valid NIC number</div>
+              </div>
+
+              <div class="col-12">
+                <label for="address" class="form-label">Address *</label>
+                <textarea class="form-control" id="address" name="address"
+                          rows="2" required></textarea>
+                <div class="invalid-feedback">Please enter your address</div>
+              </div>
+
+              <div class="col-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="terms" required>
+                  <label class="form-check-label" for="terms">
+                    I agree to the <a href="#" class="text-primary">Terms and Conditions</a> *
+                  </label>
+                </div>
+                <div class="invalid-feedback d-block">You must agree to continue</div>
+              </div>
+
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="fas fa-user-plus me-2"></i>Create Account
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div class="text-center mt-3">
+            <p class="mb-0">Already have an account?
+              <a href="/login.html" class="text-primary">Sign in here</a>
+            </p>
+          </div>
+
+          <div id="alert-container"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/js/app.js"></script>
+<script>
+  $(document).ready(function() {
+      setupRegistrationForm();
+  });
+
+  function setupRegistrationForm() {
+      // Password toggle
+      $('#togglePassword').click(function() {
+          const $password = $('#password');
+          const type = $password.attr('type') === 'password' ? 'text' : 'password';
+          $password.attr('type', type);
+          $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+      });
+
+      // NIC formatting
+      $('#nicNo').on('input', function() {
+          let value = $(this).val().replace(/[^0-9V]/g, '').toUpperCase();
+          if (value.length > 12) value = value.substring(0, 12);
+          $(this).val(value);
+      });
+
+      // Contact formatting
+      $('#contact').on('input', function() {
+          let value = $(this).val().replace(/[^0-9+]/g, '');
+          if (value.length > 15) value = value.substring(0, 15);
+          $(this).val(value);
+      });
+
+      // Password confirmation
+      $('#confirmPassword').on('input', function() {
+          const password = $('#password').val();
+          const confirmPassword = $(this).val();
+          if (confirmPassword && password !== confirmPassword) {
+              $(this).addClass('is-invalid');
+          } else {
+              $(this).removeClass('is-invalid');
+          }
+      });
+
+      // Form submission
+      $('#registerForm').on('submit', function(e) {
+          e.preventDefault();
+          if (!validateRegistrationForm()) return;
+          performRegistration();
+      });
+  }
+
+  function validateRegistrationForm() {
+      const $form = $('#registerForm');
+      const formData = collectRegistrationData();
+
+      // Basic validation
+      if (!formData.firstName || !formData.lastName || !formData.email ||
+          !formData.userName || !formData.password || !formData.contact ||
+          !formData.nicNo || !formData.address) {
+          showAlert('Please fill in all required fields', 'warning');
+          return false;
+      }
+
+      // Password match
+      if (formData.password !== $('#confirmPassword').val()) {
+          showAlert('Passwords do not match', 'warning');
+          return false;
+      }
+
+      // Password length
+      if (formData.password.length < 6) {
+          showAlert('Password must be at least 6 characters', 'warning');
+          return false;
+      }
+
+      // Terms agreement
+      if (!$('#terms').is(':checked')) {
+          showAlert('You must agree to the Terms and Conditions', 'warning');
+          return false;
+      }
+
+      // Phone validation
+      const phoneRegex = /^\+?\d{10,15}$/;
+      if (!phoneRegex.test(formData.contact)) {
+          showAlert('Please enter a valid phone number', 'warning');
+          return false;
+      }
+
+      // NIC validation
+      const nicRegex = /^\d{9}V$|^\d{12}$/;
+      if (!nicRegex.test(formData.nicNo)) {
+          showAlert('Please enter a valid NIC number (123456789V or 123456789012)', 'warning');
+          return false;
+      }
+
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+          showAlert('Please enter a valid email address', 'warning');
+          return false;
+      }
+
+      return true;
+  }
+
+  function collectRegistrationData() {
+      return {
+          firstName: $('#firstName').val().trim(),
+          lastName: $('#lastName').val().trim(),
+          email: $('#email').val().trim(),
+          userName: $('#userName').val().trim(),
+          password: $('#password').val(),
+          contact: $('#contact').val().trim(),
+          nicNo: $('#nicNo').val().trim(),
+          address: $('#address').val().trim()
+      };
+  }
+
+  function performRegistration() {
+      const signupData = collectRegistrationData();
+      const $btn = $('button[type="submit"]');
+      const originalText = $btn.html();
+
+      setLoadingState($btn, true);
+
+      $.ajax({
+          url: '/api/auth/signup',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(signupData),
+          success: function(message) {
+              showAlert('Account created successfully! You can now login.', 'success');
+              setTimeout(() => {
+                  window.location.href = '/login.html';
+              }, 2000);
+          },
+          error: function(xhr) {
+              let message = 'Registration failed. Please try again.';
+              // Your signup returns plain text error messages
+              if (xhr.responseText) {
+                  message = xhr.responseText;
+              }
+              showAlert(message, 'danger');
+          },
+          complete: function() {
+              setLoadingState($btn, false);
+              $btn.html(originalText);
+          }
+      });
+  }
+</script>
+</body>
+</html>
