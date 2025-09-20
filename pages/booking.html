@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Vehicle - DriveNow</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="/css/custom.css" rel="stylesheet">
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/">
+      <i class="fas fa-car me-2"></i>DriveNow
+    </a>
+    <div class="navbar-nav ms-auto" id="authNav">
+      <!-- Dynamic auth links -->
+    </div>
+  </div>
+</nav>
+
+<div class="container my-5">
+  <div class="row">
+    <div class="col-12">
+      <div id="alert-container"></div>
+      <a href="/" class="btn btn-outline-secondary mb-3">
+        <i class="fas fa-arrow-left me-2"></i>Back to Vehicles
+      </a>
+    </div>
+  </div>
+
+  <div class="row" id="bookingContent">
+    <!-- Dynamic booking content -->
+    <div class="col-12 text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3 text-muted">Loading booking details...</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/js/app.js"></script>
+<script>
+  $(document).ready(function() {
+      checkAuthStatus();
+      if (!isAuthenticated()) {
+          window.location.href = '/login.html';
+          return;
+      }
+      loadBookingForm();
+  });
+
+  function loadBookingForm() {
+      const vehicleId = sessionStorage.getItem('selectedVehicleId');
+      if (!vehicleId) {
+          showAlert('No vehicle selected. Please choose a vehicle first.', 'warning');
+          setTimeout(() => window.location.href = '/', 2000);
+          return;
+      }
+
+      // Load vehicle details
+      $.ajax({
+          url: `/api/vehicles/${vehicleId}`,
+          method: 'GET',
+          success: function(vehicle) {
+              displayVehicleDetails(vehicle);
+              setupBookingForm(vehicle);
+          },
+          error: function() {
+              showAlert('Failed to load vehicle details', 'danger');
+              setTimeout(() => window.location.href = '/', 2000);
+          }
+      });
+
+      // Load saved dates if available
+      const savedDates = sessionStorage.getItem('bookingDates');
+      if (savedDates) {
+          const dates = JSON.parse(savedDates);
+          $('#pickupDate').val(dates.pickupDate);
+          $('#returnDate').val(dates.returnDate);
+          calculateRentalCost();
+      }
+  }
+
+  function displayVehicleDetails(vehicle) {
+      const modelParts = vehicle.model.split(' ');
+      const make = modelParts[0];
+      const model = modelParts.slice(1).join(' ');
+
+      $('#bookingContent').html(`
+          <div class="col-lg-4">
+              <div class="card sticky-top" style="top: 20px;">
+                  <div class="card-header bg-primary text-white">
+                      <h5 class="mb-0"><i class="fas fa-car me-2"></i>Selected Vehicle</h5>
+                  </div>
+                  <div class="card-body text-center">
+                      <img src="${vehicle.imageUrl || '/images/default-car.jpg'}"
+                           class="img-fluid mb-3 rounded" style="height: 200px; object-fit: cover;"
+                           alt="${vehicle.model}">
+                      <h5 class="mb-2">${make} ${model}</h5>
+                      <div class="small text-muted mb-2">${vehicle.year} • ${vehicle.category}</div>
+                      <div class="mb-3">
+                          <span class="badge bg-secondary me-1">${vehicle.fuelType}</span>
+                          <span class="badge bg-light text-dark">${vehicle.seats} seats</span>
+                      </div>
+                      <div class="h5 text-primary mb-2">$${vehicle.rentPrice || 0}<small>/day</small></div>
+                      <div class="text-muted small">${vehicle.licensePlate}</div>
+                  </div>
+              </div>
+          </div>
+
+          <div class="col-lg-8">
+              <div class="card shadow-sm">
+                  <div class="card-header bg-light">
+                      <h4 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Booking Details</h4>
+                  </div>
+                  <div class="card-body">
+                      <form id="bookingForm" novalidate>
+                          <input type="hidden" id="vehicleId" name="vehicle.vehicleId" value="${vehicle.vehicleId}">
+
+                          <div class="row g-3">
+                              <div class="col-md-6">
+                                  <label class="form-label">Pickup Date *</label>
+                                  <input type="date" class="form-control" id="pickupDate" name="pickupDate" required>
+                              </div>
+                              <div class="col-md-6">
+                                  <label class="form-label">Return Date *</label>
+                                  <input type="date" class="form-control" id="returnDate" name="returnDate" required>
+                              </div>
+
+                              <div class="col-12">
+                                  <label class="form-label">Special Requirements</label>
+                                  <textarea class="form-control" id="requirements" name="requirements"
+                                            rows="2" placeholder="Any special requirements..."></textarea>
+                              </div>
+                          </div>
+
+                          <div class="mt-4 p-3 bg-light rounded">
+                              <h6 class="mb-3">Rental Summary</h6>
+                              <div class="row">
+                                  <div class="col-md-6">
+                                      <div class="small">
+                                          <div class="d-flex justify-content-between mb-2">
+                                              <span>Rental Period</span>
+                                              <span id="rentalDays" class="fw-bold">0 days</span>
+                                          </div>
+                                          <div class="d-flex justify-content-between">
+                                              <span>Dates</span>
+                                              <span id="dateRange" class="text-muted small"></span>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <div class="col-md-6">
+                                      <div class="h5 text-primary text-end mb-0" id="totalAmount">$0.00</div>
+                                      <div class="text-end small text-muted">Total Amount</div>
+                                  </div>
+                              </div>
+                          </div>
+
+                          <div class="mt-4">
+                              <button type="submit" class="btn btn-success btn-lg w-100" id="submitBooking">
+                                  <i class="fas fa-lock me-2"></i>Confirm Booking
+                              </button>
+                          </div>
+                      </form>
+                  </div>
+              </div>
+          </div>
+      `);
+
+      // Setup event handlers after DOM is ready
+      setupDateHandlers();
+  }
+
+  function setupBookingForm(vehicle) {
+      // Store vehicle data for calculations
+      sessionStorage.setItem('selectedVehicle', JSON.stringify(vehicle));
+
+      // Set minimum dates
+      const today = new Date().toISOString().split('T')[0];
+      $('#pickupDate, #returnDate').attr('min', today);
+
+      // Form submission
+      $('#bookingForm').on('submit', function(e) {
+          e.preventDefault();
+          if (!validateBookingForm()) return;
+          createBooking();
+      });
+
+      calculateRentalCost();
+  }
+
+  function setupDateHandlers() {
+      $('#pickupDate').on('change', function() {
+          const pickupDate = $(this).val();
+          $('#returnDate').attr('min', pickupDate || new Date().toISOString().split('T')[0]);
+          if ($('#returnDate').val() && $('#returnDate').val() < pickupDate) {
+              $('#returnDate').val('');
+          }
+          calculateRentalCost();
+      });
+
+      $('#returnDate').on('change', function() {
+          calculateRentalCost();
+      });
+  }
+
+  function validateBookingForm() {
+      const pickupDate = $('#pickupDate').val();
+      const returnDate = $('#returnDate').val();
+      const form = $('#bookingForm')[0];
+
+      if (!form.checkValidity()) {
+          form.classList.add('was-validated');
+          showAlert('Please fill in all required fields', 'warning');
+          return false;
+      }
+
+      if (!pickupDate || !returnDate) {
+          showAlert('Please select pickup and return dates', 'warning');
+          return false;
+      }
+
+      if (new Date(pickupDate) >= new Date(returnDate)) {
+          showAlert('Return date must be after pickup date', 'warning');
+          return false;
+      }
+
+      return true;
+  }
+
+  function calculateRentalCost() {
+      const vehicle = JSON.parse(sessionStorage.getItem('selectedVehicle') || '{}');
+      const pickupDate = $('#pickupDate').val();
+      const returnDate = $('#returnDate').val();
+
+      if (!vehicle.rentPrice || !pickupDate || !returnDate) {
+          $('#totalAmount').text('$0.00');
+          $('#rentalDays').text('0 days');
+          return;
+      }
+
+      const start = new Date(pickupDate);
+      const end = new Date(returnDate);
+      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+
+      const total = vehicle.rentPrice.multiply(BigDecimal.valueOf(days)); // Note: JS BigDecimal simulation
+      const totalJs = (vehicle.rentPrice || 0) * days;
+
+      $('#rentalDays').text(`${days} ${days === 1 ? 'day' : 'days'}`);
+      $('#dateRange').text(`${formatDate(pickupDate)} - ${formatDate(returnDate)}`);
+      $('#totalAmount').text(formatCurrency(totalJs));
+
+      // Update form data
+      $('#pickupDate').val(pickupDate);
+      $('#returnDate').val(returnDate);
+  }
+
+  function createBooking() {
+      const vehicle = JSON.parse(sessionStorage.getItem('selectedVehicle') || '{}');
+      const formData = {
+          date: new Date().toISOString().split('T')[0],
+          pickupDate: $('#pickupDate').val(),
+          returnDate: $('#returnDate').val(),
+          vehicle: {
+              vehicleId: vehicle.vehicleId
+          },
+          requirements: $('#requirements').val() || ''
+          // Note: No driverRequired or locations in your DTO
+      };
+
+      const $btn = $('#submitBooking');
+      const originalText = $btn.html();
+      setLoadingState($btn, true);
+
+      $.ajax({
+          url: '/api/bookings',
+          method: 'POST',
+          contentType: 'application/json',
+          headers: getAuthHeaders(),
+          data: JSON.stringify(formData),
+          success: function(booking) {
+              showAlert('Booking created successfully! ID: ' + booking.rentId, 'success');
+              sessionStorage.removeItem('selectedVehicleId');
+              sessionStorage.removeItem('bookingDates');
+              sessionStorage.removeItem('selectedVehicle');
+
+              setTimeout(() => {
+                  window.location.href = `/my-bookings.html?newBooking=${booking.rentId}`;
+              }, 2000);
+          },
+          error: function(xhr) {
+              let message = 'Booking failed. Please try again.';
+              if (xhr.responseJSON && xhr.responseJSON.message) {
+                  message = xhr.responseJSON.message;
+              }
+              showAlert(message, 'danger');
+          },
+          complete: function() {
+              setLoadingState($btn, false);
+              $btn.html(originalText);
+          }
+      });
+  }
+</script>
+</body>
+</html>
