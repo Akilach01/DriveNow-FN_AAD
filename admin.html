@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - DriveNow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/custom.css" rel="stylesheet">
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+            <i class="fas fa-car me-2"></i>DriveNow Admin
+        </a>
+        <div class="navbar-nav ms-auto" id="authNav">
+            <!-- Dynamic admin links -->
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin.html">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin-bookings.html">
+                            <i class="fas fa-calendar-check me-2"></i>Bookings
+                            <span class="badge bg-primary rounded-pill ms-2" id="pendingBookingsCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadUsers()">
+                            <i class="fas fa-users me-2"></i>Users
+                            <span class="badge bg-info rounded-pill ms-2" id="totalUsersCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadVehicles()">
+                            <i class="fas fa-car-side me-2"></i>Vehicles
+                            <span class="badge bg-success rounded-pill ms-2" id="availableVehiclesCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadDrivers()">
+                            <i class="fas fa-user-tie me-2"></i>Drivers
+                            <span class="badge bg-warning rounded-pill ms-2" id="availableDriversCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadReports()">
+                            <i class="fas fa-chart-bar me-2"></i>Reports
+                        </a>
+                    </li>
+                    <li class="nav-item mt-auto">
+                        <a class="nav-link text-danger" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div id="alert-container"></div>
+
+            <!-- Dashboard Header -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2"><i class="fas fa-tachometer-alt me-2 text-primary"></i>Admin Dashboard</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshDashboard()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="exportData('bookings')">Export Bookings</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportData('users')">Export Users</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="logout()">Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total Bookings
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalBookingsStat">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Pending Approvals
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="pendingBookingsStat">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Total Users
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalUsersStat">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-users fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Available Vehicles
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="availableVehiclesStat">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-car fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="row">
+                <div class="col-xl-8 col-lg-7">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Recent Bookings</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="recentBookingsTable">
+                                    <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Customer</th>
+                                        <th>Vehicle</th>
+                                        <th>Dates</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="col-xl-4 col-lg-5">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                <a href="/admin-bookings.html" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1"><i class="fas fa-calendar-check me-2 text-primary"></i>Manage Bookings</h6>
+                                        <span class="badge bg-primary rounded-pill">Go</span>
+                                    </div>
+                                    <p class="mb-1 small text-muted">Approve/reject pending bookings</p>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action" onclick="addNewVehicleModal()">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1"><i class="fas fa-car-plus me-2 text-success"></i>Add Vehicle</h6>
+                                        <span class="badge bg-success rounded-pill">New</span>
+                                    </div>
+                                    <p class="mb-1 small text-muted">Add new vehicle to fleet</p>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action" onclick="addNewDriverModal()">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1"><i class="fas fa-user-plus me-2 text-info"></i>Add Driver</h6>
+                                        <span class="badge bg-info rounded-pill">New</span>
+                                    </div>
+                                    <p class="mb-1 small text-muted">Register new driver</p>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action" onclick="generateReport()">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1"><i class="fas fa-file-export me-2 text-warning"></i>Generate Report</h6>
+                                        <span class="badge bg-warning text-dark rounded-pill">Export</span>
+                                    </div>
+                                    <p class="mb-1 small text-muted">Download monthly report</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Status -->
+                    <div class="card shadow">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="m-0"><i class="fas fa-cog me-2"></i>System Status</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6 border-end">
+                                    <div class="h6 text-success mb-0">Online</div>
+                                    <small class="text-muted">Server Status</small>
+                                </div>
+                                <div class="col-6">
+                                    <div class="h6 text-success mb-0">Active</div>
+                                    <small class="text-muted">Database</small>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="text-center">
+                                <small class="text-muted">Last backup: <span id="lastBackup">2 hours ago</span></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Add Vehicle Modal -->
+<div class="modal fade" id="addVehicleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-car-plus me-2"></i>Add New Vehicle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addVehicleForm">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Model *</label>
+                            <input type="text" class="form-control" name="model" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Year *</label>
+                            <input type="number" class="form-control" name="year" min="1900" max="2025" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category *</label>
+                            <select class="form-select" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="SEDAN">Sedan</option>
+                                <option value="SUV">SUV</option>
+                                <option value="HATCHBACK">Hatchback</option>
+                                <option value="VAN">Van</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Fuel Type *</label>
+                            <select class="form-select" name="fuelType" required>
+                                <option value="">Select Fuel Type</option>
+                                <option value="PETROL">Petrol</option>
+                                <option value="DIESEL">Diesel</option>
+                                <option value="HYBRID">Hybrid</option>
+                                <option value="ELECTRIC">Electric</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Color *</label>
+                            <input type="text" class="form-control" name="colour" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">License Plate *</label>
+                            <input type="text" class="form-control" name="licensePlate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Seats *</label>
+                            <input type="number" class="form-control" name="seats" min="2" max="20" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Daily Rate ($)*</label>
+                            <input type="number" class="form-control" name="rentPrice" step="0.01" min="10" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Image URL (optional)</label>
+                            <input type="url" class="form-control" name="imageUrl" placeholder="https://example.com/image.jpg">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Vehicle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Driver Modal -->
+<div class="modal fade" id="addDriverModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add New Driver</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addDriverForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">NIC Number *</label>
+                        <input type="text" class="form-control" name="nic" pattern="\\d{9}V|\\d{12}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Number *</label>
+                        <input type="tel" class="form-control" name="contact" pattern="\\+?\\d{10,15}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" name="address" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Driver</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/js/app.js"></script>
+<script>
+    $(document).ready(function() {
+        checkAuthStatus();
+        if (!isAuthenticated() || !isAdmin()) {
+            window.location.href = '/login.html';
+            return;
+        }
+
+        loadDashboardData();
+        setupAdminHandlers();
+    });
+
+    function isAdmin() {
+        return currentUser && currentUser.roles && currentUser.roles.includes('ROLE_ADMIN');
+    }
+
+    function loadDashboardData() {
+        // Load stats
+        loadDashboardStats();
+
+        // Load recent bookings
+        loadRecentBookings();
+
+        // Update navigation counts
+        updateNavigationCounts();
+    }
+
+    function loadDashboardStats() {
+        // Total Bookings
+        $.ajax({
+            url: '/api/bookings',
+            method: 'GET',
+            headers: getAuthHeaders(),
+            success: function(bookings) {
+                $('#totalBookingsStat').text(bookings.length);
+
+                // Pending bookings
+                const pending = bookings.filter(b => b.status === 'PENDING').length;
+                $('#pendingBookingsStat').text(pending);
+                $('#pendingBookingsCount').text(pending);
+
+                // Total users
+                $.ajax({
+                    url: '/api/users',
+                    method: 'GET',
+                    headers: getAuthHeaders(),
+                    success: function(users) {
+                        $('#totalUsersStat').text(users.length);
+                        $('#totalUsersCount').text(users.length);
+                    }
+                });
+
+                // Available vehicles
+                $.ajax({
+                    url: '/api/vehicles/available',
+                    method: 'GET',
+                    success: function(vehicles) {
+                        $('#availableVehiclesStat').text(vehicles.length);
+                        $('#availableVehiclesCount').text(vehicles.length);
+                    }
+                });
+            }
+        });
+    }
+
+    function loadRecentBookings() {
+        $.ajax({
+            url: '/api/bookings',
+            method: 'GET',
+            headers: getAuthHeaders(),
+            success: function(bookings) {
+                // Sort by date (most recent first)
+                const recentBookings = bookings
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .slice(0, 10);
+
+                displayRecentBookings(recentBookings);
+            },
+            error: function() {
+                $('#recentBookingsTable tbody').html(`
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Unable to load recent bookings
+                        </td>
+                    </tr>
+                `);
+            }
+        });
+    }
+
+    function displayRecentBookings(bookings) {
+        if (bookings.length === 0) {
+            $('#recentBookingsTable tbody').html(`
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        No recent bookings found
+                    </td>
+                </tr>
+            `);
+            return;
+        }
+
+        let tableHtml = '';
+        bookings.forEach(function(booking) {
+            const statusClass = getStatusClass(booking.status);
+            const statusIcon = getStatusIcon(booking.status);
+            const modelParts = booking.vehicle.model.split(' ');
+            const make = modelParts[0];
+            const model = modelParts.slice(1).join(' ');
+            const days = calculateRentalDays(booking.pickupDate, booking.returnDate);
+
+            tableHtml += `
+                <tr class="table-row" onclick="viewBooking(${booking.rentId})">
+                    <td class="fw-bold">#${booking.rentId}</td>
+                    <td>
+                        <div>${booking.user.firstName} ${booking.user.lastName}</div>
+                        <small class="text-muted">${booking.user.email}</small>
+                    </td>
+                    <td>
+                        <div>${make} ${model}</div>
+                        <small class="text-muted">${booking.vehicle.category} • ${booking.vehicle.fuelType}</small>
+                    </td>
+                    <td>
+                        <div>${formatDate(booking.pickupDate)} - ${formatDate(booking.returnDate)}</div>
+                        <small class="text-muted">${days} days</small>
+                    </td>
+                    <td class="fw-bold text-primary">$${booking.payment || 0}</td>
+                    <td>
+                        <span class="badge ${statusClass}">${statusIcon} ${booking.status}</span>
+                    </td>
+                    <td>
+                        ${booking.status === 'PENDING' ?
+                            `<div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-success btn-sm" onclick="event.stopPropagation(); approveBooking(${booking.rentId})">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="event.stopPropagation(); rejectBooking(${booking.rentId})">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </div>` :
+                            `<span class="text-muted small">${booking.status}</span>`
+                        }
+                    </td>
+                </tr>
+            `;
+        });
+
+        $('#recentBookingsTable tbody').html(tableHtml);
+    }
+
+    function setupAdminHandlers() {
+        // Add vehicle form
+        $('#addVehicleForm').on('submit', function(e) {
+            e.preventDefault();
+            addVehicle();
+        });
+
+        // Add driver form
+        $('#addDriverForm').on('submit', function(e) {
+            e.preventDefault();
+            addDriver();
+        });
+
+        // Refresh button
+        $(document).on('click', '#refreshBtn', loadDashboardData);
+    }
+
+    function refreshDashboard() {
+        showAlert('Refreshing dashboard data...', 'info');
+        loadDashboardData();
+    }
+
+    function addNewVehicleModal() {
+        $('#addVehicleModal').modal('show');
+        $('#addVehicleForm')[0].reset();
+    }
+
+    function addNewDriverModal() {
+        $('#addDriverModal').modal('show');
+        $('#addDriverForm')[0].reset();
+    }
+
+    function addVehicle() {
+        const vehicleData = {
+            model: $('#addVehicleForm input[name="model"]').val(),
+            year: parseInt($('#addVehicleForm input[name="year"]').val()),
+            category: $('#addVehicleForm select[name="category"]').val(),
+            fuelType: $('#addVehicleForm select[name="fuelType"]').val(),
+            colour: $('#addVehicleForm input[name="colour"]').val(),
+            licensePlate: $('#addVehicleForm input[name="licensePlate"]').val(),
+            seats: parseInt($('#addVehicleForm input[name="seats"]').val()),
+            rentPrice: parseFloat($('#addVehicleForm input[name="rentPrice"]').val()),
+            imageUrl: $('#addVehicleForm input[name="imageUrl"]').val() || null,
+            status: 'AVAILABLE'
+        };
+
+        const $btn = $('#addVehicleForm button[type="submit"]');
+        const originalText = $btn.html();
+
+        setLoadingState($btn, true);
+
+        $.ajax({
+            url: '/api/vehicles',
+            method: 'POST',
+            contentType: 'application/json',
+            headers: getAuthHeaders(),
+            data: JSON.stringify(vehicleData),
+            success: function(newVehicle) {
+                showAlert('Vehicle added successfully!', 'success');
+                $('#addVehicleModal').modal('hide');
+                loadDashboardData(); // Refresh stats
+            },
+            error: function(xhr) {
+                let message = 'Failed to add vehicle';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showAlert(message, 'danger');
+            },
+            complete: function() {
+                setLoadingState($btn, false);
+                $btn.html(originalText);
+            }
+        });
+    }
+
+    function addDriver() {
+        const driverData = {
+            name: $('#addDriverForm input[name="name"]').val(),
+            nic: $('#addDriverForm input[name="nic"]').val(),
+            email: $('#addDriverForm input[name="email"]').val(),
+            contact: $('#addDriverForm input[name="contact"]').val(),
+            address: $('#addDriverForm textarea[name="address"]').val() || null,
+            status: 'AVAILABLE'
+        };
+
+        const $btn = $('#addDriverForm button[type="submit"]');
+        const originalText = $btn.html();
+
+        setLoadingState($btn, true);
+
+        $.ajax({
+            url: '/api/admin/drivers',
+            method: 'POST',
+            contentType: 'application/json',
+            headers: getAuthHeaders(),
+            data: JSON.stringify(driverData),
+            success: function(newDriver) {
+                showAlert('Driver added successfully!', 'success');
+                $('#addDriverModal').modal('hide');
+                loadDashboardData(); // Refresh stats
+            },
+            error: function(xhr) {
+                let message = 'Failed to add driver';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showAlert(message, 'danger');
+            },
+            complete: function() {
+                setLoadingState($btn, false);
+                $btn.html(originalText);
+            }
+        });
+    }
+
+    function approveBooking(bookingId) {
+        if (!confirm('Approve this booking?')) return;
+
+        $.ajax({
+            url: `/api/admin/bookings/${bookingId}/approve`,
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            success: function() {
+                showAlert('Booking approved successfully!', 'success');
+                loadRecentBookings();
+                loadDashboardData();
+            },
+            error: function() {
+                showAlert('Failed to approve booking', 'danger');
+            }
+        });
+    }
+
+    function rejectBooking(bookingId) {
+        if (!confirm('Reject this booking?')) return;
+
+        $.ajax({
+            url: `/api/admin/bookings/${bookingId}/reject`,
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            success: function() {
+                showAlert('Booking rejected successfully!', 'success');
+                loadRecentBookings();
+                loadDashboardData();
+            },
+            error: function() {
+                showAlert('Failed to reject booking', 'danger');
+            }
+        });
+    }
+
+    function viewBooking(bookingId) {
+        window.location.href = `/admin-bookings.html?booking=${bookingId}`;
+    }
+
+    function updateNavigationCounts() {
+        // These will be populated by loadDashboardData()
+        // Just ensure the elements exist
+    }
+
+    function loadUsers() {
+        window.location.href = '/admin-users.html';
+    }
+
+    function loadVehicles() {
+        window.location.href = '/admin-vehicles.html';
+    }
+
+    function loadDrivers() {
+        window.location.href = '/admin-drivers.html';
+    }
+
+    function loadReports() {
+        showAlert('Report generation feature coming soon!', 'info');
+    }
+
+    function generateReport() {
+        showAlert('Export functionality will be implemented soon!', 'info');
+    }
+
+    function exportData(type) {
+        showAlert(`Exporting ${type} data...`, 'info');
+        // Implement export functionality
+    }
+
+    function getStatusClass(status) {
+        const classes = {
+            'PENDING': 'bg-warning text-dark',
+            'APPROVED': 'bg-success',
+            'CANCELLED': 'bg-secondary',
+            'COMPLETED': 'bg-info'
+        };
+        return classes[status] || 'bg-secondary';
+    }
+
+    function getStatusIcon(status) {
+        const icons = {
+            'PENDING': 'fas fa-clock',
+            'APPROVED': 'fas fa-check-circle',
+            'CANCELLED': 'fas fa-times-circle',
+            'COMPLETED': 'fas fa-check-double'
+        };
+        return icons[status] || 'fas fa-question-circle';
+    }
+</script>
+</body>
+</html>

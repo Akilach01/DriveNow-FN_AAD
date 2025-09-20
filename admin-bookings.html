@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bookings - DriveNow Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/custom.css" rel="stylesheet">
+</head>
+<body>
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/admin.html">
+            <i class="fas fa-car me-2"></i>DriveNow Admin
+        </a>
+        <div class="navbar-nav ms-auto" id="authNav">
+            <!-- Dynamic admin links -->
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin.html">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin-bookings.html">
+                            <i class="fas fa-calendar-check me-2"></i>Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadUsers()">
+                            <i class="fas fa-users me-2"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadVehicles()">
+                            <i class="fas fa-car-side me-2"></i>Vehicles
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="loadDrivers()">
+                            <i class="fas fa-user-tie me-2"></i>Drivers
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-3 mb-3 border-bottom">
+                <div>
+                    <h1 class="h2"><i class="fas fa-calendar-check me-2 text-primary"></i>Manage Bookings</h1>
+                    <span class="badge bg-primary fs-6" id="totalBookingsCount">0</span>
+                </div>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshBookings()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportBookings()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label small">Status</label>
+                            <select class="form-select" id="statusFilter">
+                                <option value="">All Status</option>
+                                <option value="PENDING">Pending</option>
+                                <option value="APPROVED">Approved</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Customer</label>
+                            <input type="text" class="form-control" id="customerFilter" placeholder="Search customer">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Vehicle</label>
+                            <input type="text" class="form-control" id="vehicleFilter" placeholder="Search vehicle">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Date Range</label>
+                            <input type="date" class="form-control" id="dateFilter">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-secondary w-100" id="clearFilters">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </button>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <button class="btn btn-primary w-100" onclick="applyFilters()">
+                                <i class="fas fa-search me-2"></i>Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bookings Table -->
+            <div class="card shadow">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="bookingsTable">
+                            <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Vehicle</th>
+                                <th>Dates</th>
+                                <th>Duration</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Driver</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="bookingsTableBody">
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                        <span class="visually-hidden">Loading bookings...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="row align-items-center">
+                            <div class="col-sm-6">
+                                <small class="text-muted">
+                                    Showing <span id="showingCount">0</span> of <span id="totalFilteredCount">0</span> bookings
+                                </small>
+                            </div>
+                            <div class="col-sm-6">
+                                <nav aria-label="Bookings pagination">
+                                    <ul class="pagination pagination-sm justify-content-end mb-0" id="pagination">
+                                        <!-- Dynamic pagination -->
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Assign Driver Modal -->
+<div class="modal fade" id="assignDriverModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assignDriverTitle">Assign Driver</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="assignDriverForm">
+                    <input type="hidden" id="assignBookingId" name="bookingId">
+                    <div class="mb-3">
+                        <label class="form-label">Select Driver</label>
+                        <select class="form-select" id="driverSelect" name="driverId" required>
+                            <option value="">Choose a driver...</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="assignSelectedDriver()">Assign Driver</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/js/app.js"></script>
+<script>
+    $(document).ready(function() {
+        checkAuthStatus();
+        if (!isAuthenticated() || !isAdmin()) {
+            window.location.href = '/login.html';
+            return;
+        }
+
+        loadAllBookings();
+        setupBookingHandlers();
+    });
+
+    let allBookings = [];
+    let filteredBookings = [];
+    let currentPage = 0;
+    const itemsPerPage = 10;
+
+    function isAdmin() {
+        return currentUser && currentUser.roles && currentUser.roles.includes('ROLE_ADMIN');
+    }
+
+    function loadAllBookings() {
+        $.ajax({
+            url: '/api/bookings',
+            method: 'GET',
+            headers: getAuthHeaders(),
+            success: function(bookings) {
+                allBookings = bookings;
+                filteredBookings = bookings;
+                renderBookingsTable();
+                updateCounts();
+            },
+            error: function() {
+                showAlert('Failed to load bookings', 'danger');
+                $('#bookingsTableBody').html(`
+                    <tr>
+                        <td colspan="9" class="text-center text-danger py-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Unable to load bookings data
+                        </td>
+                    </tr>
+                `);
+            }
+        });
+    }
+
+    function renderBookingsTable() {
+        const startIndex = currentPage * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const pageBookings = filteredBookings.slice(startIndex, endIndex);
+
+        if (pageBookings.length === 0) {
+            $('#bookingsTableBody').html(`
+                <tr>
+                    <td colspan="9" class="text-center py-4">
+                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                        <div class="text-muted">No bookings found</div>
+                        <small class="text-muted">Try adjusting your filters</small>
+                    </td>
+                </tr>
+            `);
+            renderPagination(0);
+            return;
+        }
+
+        let tableHtml = '';
+        pageBookings.forEach(function(booking) {
+            const statusConfig = getStatusConfig(booking.status);
+            const modelParts = booking.vehicle.model.split(' ');
+            const make = modelParts[0];
+            const model = modelParts.slice(1).join(' ');
+            const days = calculateRentalDays(booking.pickupDate, booking.returnDate);
+            const driverName = booking.driver ? `${booking.driver.name}` : 'Not Assigned';
+
+            tableHtml += `
+                <tr class="table-row ${booking.status === 'PENDING' ? 'table-warning' : ''}">
+                    <td class="fw-bold">#${booking.rentId}</td>
+                    <td>
+                        <div class="fw-medium">${booking.user.firstName} ${booking.user.lastName}</div>
+                        <small class="text-muted">${booking.user.email}</small>
+                        <br><small class="text-muted">${booking.user.contact}</small>
+                    </td>
+                    <td>
+                        <div class="fw-medium">${make} ${model}</div>
+                        <small class="text-muted">
+                            ${booking.vehicle.category} • ${booking.vehicle.fuelType} •
+                            ${booking.vehicle.seats} seats
+                        </small>
+                    </td>
+                    <td>
+                        <div><strong>${formatDate(booking.pickupDate)}</strong></div>
+                        <small class="text-muted">to ${formatDate(booking.returnDate)}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-info">${days} ${days === 1 ? 'day' : 'days'}</span>
+                    </td>
+                    <td class="fw-bold text-primary">$${booking.payment || 0}</td>
+                    <td>
+                        <span class="badge ${statusConfig.badgeClass} fs-6">
+                            ${statusConfig.icon} ${statusConfig.label}
+                        </span>
+                    </td>
+                    <td>
+                        ${booking.driver ?
+                            `<div class="fw-medium">${driverName}</div>
+                             <small class="text-muted">${booking.driver.contact}</small>` :
+                            `<span class="text-muted">Not Assigned</span>`
+                        }
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-primary" onclick="viewBookingDetails(${booking.rentId})"
+                                    title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${booking.status === 'PENDING' ? `
+                                <button class="btn btn-outline-success" onclick="approveBooking(${booking.rentId})"
+                                        title="Approve">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="rejectBooking(${booking.rentId})"
+                                        title="Reject">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : ''}
+                            ${!booking.driver && (booking.status === 'APPROVED') ? `
+                                <button class="btn btn-outline-info" onclick="assignDriverModal(${booking.rentId})"
+                                        title="Assign Driver">
+                                    <i class="fas fa-user-tie"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        $('#bookingsTableBody').html(tableHtml);
+        renderPagination(filteredBookings.length);
+    }
+
+    function setupBookingHandlers() {
+        // Filter handlers
+        $('#statusFilter, #customerFilter, #vehicleFilter, #dateFilter').on('change keyup', debounce(function() {
+            applyFilters();
+        }, 300));
+
+        $('#clearFilters').on('click', function() {
+            $('#statusFilter').val('');
+            $('#customerFilter').val('');
+            $('#vehicleFilter').val('');
+            $('#dateFilter').val('');
+            currentPage = 0;
+            applyFilters();
+        });
+
+        // Table row click (view booking)
+        $(document).on('click', '.table-row', function(e) {
+            if ($(e.target).closest('button, .btn').length === 0) {
+                const bookingId = $(this).find('td:first').text().replace('#', '');
+                viewBookingDetails(bookingId);
+            }
+        });
+    }
+
+    function applyFilters() {
+        const statusFilter = $('#statusFilter').val();
+        const customerFilter = $('#customerFilter').val().toLowerCase().trim();
+        const vehicleFilter = $('#vehicleFilter').val().toLowerCase().trim();
+        const dateFilter = $('#dateFilter').val();
+
+        filteredBookings = allBookings.filter(function(booking) {
+            let matches = true;
+
+            // Status filter
+            if (statusFilter && booking.status !== statusFilter) {
+                matches = false;
+            }
+
+            // Customer filter
+            if (customerFilter) {
+                const customerName = `${booking.user.firstName} ${booking.user.lastName}`.toLowerCase();
+                const customerEmail = booking.user.email.toLowerCase();
+                if (!customerName.includes(customerFilter) && !customerEmail.includes(customerFilter)) {
+                    matches = false;
+                }
+            }
+
+            // Vehicle filter
+            if (vehicleFilter) {
+                const vehicleName = booking.vehicle.model.toLowerCase();
+                if (!vehicleName.includes(vehicleFilter)) {
+                    matches = false;
+                }
+            }
+
+            // Date filter
+            if (dateFilter) {
+                if (booking.pickupDate !== dateFilter) {
+                    matches = false;
+                }
+            }
+
+            return matches;
+        });
+
+        currentPage = 0;
+        renderBookingsTable();
+        updateCounts();
+    }
+
+    function updateCounts() {
+        $('#totalBookingsCount').text(allBookings.length);
+        const showingCount = Math.min((currentPage + 1) * itemsPerPage, filteredBookings.length);
+        const totalFiltered = filteredBookings.length;
+        $('#showingCount').text(showingCount);
+        $('#totalFilteredCount').text(totalFiltered);
+    }
+
+    function renderPagination(totalItems) {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        let paginationHtml = '';
+
+        if (totalPages <= 1) {
+            $('#pagination').html('');
+            return;
+        }
+
+        // Previous button
+        paginationHtml += `
+            <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;" tabindex="-1">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+        `;
+
+        // Page numbers
+        const startPage = Math.max(0, currentPage - 2);
+        const endPage = Math.min(totalPages - 1, currentPage + 2);
+
+        if (startPage > 0) {
+            paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(0);">1</a></li>`;
+            if (startPage > 1) {
+                paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHtml += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i + 1}</a>
+                </li>
+            `;
+        }
+
+        if (endPage < totalPages - 1) {
+            if (endPage < totalPages - 2) {
+                paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+            paginationHtml += `
+                <li class="page-item">
+                    <a class="page-link" href="#" onclick="changePage(${totalPages - 1});">${totalPages}</a>
+                </li>
+            `;
+        }
+
+        // Next button
+        paginationHtml += `
+            <li class="page-item ${currentPage === totalPages - 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        `;
+
+        $('#pagination').html(paginationHtml);
+    }
+
+    function changePage(page) {
+        const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+        if (page >= 0 && page < totalPages) {
+            currentPage = page;
+            renderBookingsTable();
+        }
+    }
+
+    function viewBookingDetails(bookingId) {
+        window.open(`/booking-details.html?id=${bookingId}`, '_blank');
+    }
+
+    function approveBooking(bookingId) {
+        if (!confirm('Approve this booking? The vehicle will be marked as unavailable.')) {
+            return;
+        }
+
+        const $row = $(`tr:has(td:contains(#${bookingId}))`);
+        const $statusCell = $row.find('td').eq(6); // Status column
+        const originalStatus = $statusCell.find('.badge').text().trim();
+
+        setLoadingState($statusCell.find('button.btn-outline-success'), true);
+
+        $.ajax({
+            url: `/api/admin/bookings/${bookingId}/approve`,
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            success: function(updatedBooking) {
+                showAlert(`Booking #${bookingId} approved successfully!`, 'success');
+                updateBookingRow(bookingId, updatedBooking);
+                loadDashboardData(); // Update dashboard stats
+            },
+            error: function(xhr) {
+                let message = 'Failed to approve booking';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showAlert(message, 'danger');
+            },
+            complete: function() {
+                setLoadingState($statusCell.find('button.btn-outline-success'), false);
+            }
+        });
+    }
+
+    function rejectBooking(bookingId) {
+        if (!confirm('Reject this booking? The vehicle will remain available.')) {
+            return;
+        }
+
+        const $row = $(`tr:has(td:contains(#${bookingId}))`);
+        const $statusCell = $row.find('td').eq(6);
+
+        setLoadingState($statusCell.find('button.btn-outline-danger'), true);
+
+        $.ajax({
+            url: `/api/admin/bookings/${bookingId}/reject`,
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            success: function(updatedBooking) {
+                showAlert(`Booking #${bookingId} rejected successfully!`, 'success');
+                updateBookingRow(bookingId, updatedBooking);
+                loadDashboardData(); // Update dashboard stats
+            },
+            error: function(xhr) {
+                let message = 'Failed to reject booking';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showAlert(message, 'danger');
+            },
+            complete: function() {
+                setLoadingState($statusCell.find('button.btn-outline-danger'), false);
+            }
+        });
+    }
+
+    function assignDriverModal(bookingId) {
+        $('#assignBookingId').val(bookingId);
+        $('#assignDriverTitle').text(`Assign Driver to Booking #${bookingId}`);
+
+        // Load available drivers
+        $.ajax({
+            url: '/api/admin/drivers/available',
+            method: 'GET',
+            headers: getAuthHeaders(),
+            success: function(drivers) {
+                let options = '<option value="">Select a driver...</option>';
+                drivers.forEach(function(driver) {
+                    options += `<option value="${driver.driverId}">${driver.name} (${driver.contact})</option>`;
+                });
+                $('#driverSelect').html(options);
+            }
+        });
+
+        $('#assignDriverModal').modal('show');
+    }
+
+    function assignSelectedDriver() {
+        const bookingId = $('#assignBookingId').val();
+        const driverId = $('#driverSelect').val();
+
+        if (!driverId) {
+            showAlert('Please select a driver', 'warning');
+            return;
+        }
+
+        setLoadingState($('#assignDriverModal .btn-primary'), true);
+
+        $.ajax({
+            url: `/api/admin/bookings/${bookingId}/driver/${driverId}`,
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            success: function(updatedBooking) {
+                showAlert(`Driver assigned to booking #${bookingId}!`, 'success');
+                $('#assignDriverModal').modal('hide');
+                updateBookingRow(bookingId, updatedBooking);
+            },
+            error: function(xhr) {
+                let message = 'Failed to assign driver';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showAlert(message, 'danger');
+            },
+            complete: function() {
+                setLoadingState($('#assignDriverModal .btn-primary'), false);
+            }
+        });
+    }
+
+    function updateBookingRow(bookingId, updatedBooking) {
+        const $row = $(`tr:has(td:contains(#${bookingId}))`);
+        if ($row.length === 0) {
+            loadAllBookings(); // Refresh if row not found
+            return;
+        }
+
+        // Update status
+        const statusCell = $row.find('td').eq(6);
+        const statusConfig = getStatusConfig(updatedBooking.status);
+        statusCell.html(`<span class="badge ${statusConfig.badgeClass}">${statusConfig.icon} ${statusConfig.label}</span>`);
+
+        // Update driver if assigned
+        if (updatedBooking.driver) {
+            const driverCell = $row.find('td').eq(7);
+            driverCell.html(`
+                <div class="fw-medium">${updatedBooking.driver.name}</div>
+                <small class="text-muted">${updatedBooking.driver.contact}</small>
+            `);
+        }
+
+        // Update action buttons based on new status
+        const actionCell = $row.find('td').eq(8);
+        if (updatedBooking.status === 'PENDING') {
+            actionCell.html(`
+                <div class="btn-group btn-group-sm" role="group">
+                    <button class="btn btn-outline-success btn-sm" onclick="approveBooking(${bookingId})">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="rejectBooking(${bookingId})">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            `);
+        } else if (updatedBooking.status === 'APPROVED' && !updatedBooking.driver) {
+            actionCell.html(`
+                <div class="btn-group btn-group-sm" role="group">
+                    <button class="btn btn-outline-info btn-sm" onclick="assignDriverModal(${bookingId})">
+                        <i class="fas fa-user-tie"></i> Assign Driver
+                    </button>
+                </div>
+            `);
+        } else {
+            actionCell.html('<span class="text-muted small">No actions available</span>');
+        }
+
+        // Remove row click handler to prevent conflicts
+        $row.off('click');
+    }
+
+    function refreshBookings() {
+        currentPage = 0;
+        loadAllBookings();
+    }
+
+    function exportBookings() {
+        // Simple CSV export
+        if (filteredBookings.length === 0) {
+            showAlert('No bookings to export', 'warning');
+            return;
+        }
+
+        let csv = 'Booking ID,Customer,Vehicle,Dates,Amount,Status,Driver\n';
+        filteredBookings.forEach(function(booking) {
+            const customer = `${booking.user.firstName} ${booking.user.lastName}`;
+            const vehicle = booking.vehicle.model;
+            const dates = `${formatDate(booking.pickupDate)} - ${formatDate(booking.returnDate)}`;
+            const driver = booking.driver ? booking.driver.name : 'Not Assigned';
+
+            csv += `"${booking.rentId}","${customer}","${vehicle}","${dates}","$${booking.payment}","${booking.status}","${driver}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `drive-now-bookings-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+        showAlert('Bookings exported successfully!', 'success');
+    }
+
+    function getStatusConfig(status) {
+        return {
+            'PENDING': {
+                label: 'Pending',
+                badgeClass: 'bg-warning text-dark',
+                icon: '<i class="fas fa-clock me-1"></i>'
+            },
+            'APPROVED': {
+                label: 'Approved',
+                badgeClass: 'bg-success',
+                icon: '<i class="fas fa-check-circle me-1"></i>'
+            },
+            'CANCELLED': {
+                label: 'Cancelled',
+                badgeClass: 'bg-secondary',
+                icon: '<i class="fas fa-times-circle me-1"></i>'
+            }
+        }[status] || {
+            label: status,
+            badgeClass: 'bg-secondary',
+            icon: '<i class="fas fa-question-circle me-1"></i>'
+        };
+    }
+
+    // Debounce utility for search filters
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+</script>
+</body>
+</html>
