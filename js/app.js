@@ -147,7 +147,7 @@ function getAuthHeaders() {
     } : { 'Content-Type': 'application/json' };
 }
 
-function isAuthenticated() {
+function isUserAuthenticated() {
     return isAuthenticated && localStorage.getItem('jwtToken');
 }
 
