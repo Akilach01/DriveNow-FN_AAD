@@ -8,6 +8,10 @@ const APP_CONFIG = {
 let currentUser = null;
 let isAuthenticated = false;
 
+window.isAuthenticated = function() {
+    return isAuthenticated && localStorage.getItem('jwtToken');
+};
+
 // Initialize app
 $(document).ready(function() {
     initializeApp();
@@ -43,6 +47,8 @@ function checkAuthStatus() {
 
 function updateNavigation() {
     const $authNav = $('#authNav');
+    if (!$authNav.length) return;
+
     $authNav.empty();
 
     if (isAuthenticated && currentUser) {
@@ -147,12 +153,16 @@ function getAuthHeaders() {
     } : { 'Content-Type': 'application/json' };
 }
 
-function isUserAuthenticated() {
+window.isAuthenticated = function() {
     return isAuthenticated && localStorage.getItem('jwtToken');
-}
+};
 
 // UI Utilities
 function showAlert(message, type = 'info', duration = 5000) {
+if (!$('#alert-container').length) {
+        $('body').prepend('<div id="alert-container" class="container mt-3"></div>');
+    }
+
     const alertTypes = {
         'success': 'alert-success',
         'info': 'alert-info',
