@@ -250,7 +250,7 @@
       setLoadingState($btn, true);
 
       $.ajax({
-          url: '/api/auth/signup',
+          url: 'http://localhost:8080/api/auth/signup',
           method: 'POST',
           contentType: 'application/json',
           data: JSON.stringify(signupData),

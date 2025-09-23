@@ -92,7 +92,7 @@
       const endpoint = isAdmin() ? `/api/bookings/${bookingId}` : `/api/bookings/${bookingId}`;
 
       $.ajax({
-          url: endpoint,
+          url: http://localhost:8080/api/bookings,
           method: 'GET',
           headers: getAuthHeaders(),
           success: function(booking) {
@@ -378,8 +378,8 @@
 
   function adminAction(action, bookingId) {
       const url = action === 'approve' ?
-          `/api/admin/bookings/${bookingId}/approve` :
-          `/api/admin/bookings/${bookingId}/reject`;
+          `http://localhost:8080/api/admin/bookings/${bookingId}/approve` :
+          `http://localhost:8080/api/admin/bookings/${bookingId}/reject`;
 
       const confirmMessage = action === 'approve' ?
           'Approve this booking?' : 'Reject this booking?';
@@ -387,7 +387,7 @@
       if (!confirm(confirmMessage)) return;
 
       $.ajax({
-          url: url,
+          url: http://localhost:8080/api/admin/bookings,
           method: 'PUT',
           headers: getAuthHeaders(),
           success: function() {
@@ -410,7 +410,7 @@
       }
 
       $.ajax({
-          url: `/api/bookings/${bookingId}/cancel`,
+          url: `http://localhost:8080/api/bookings/${bookingId}/cancel`,
           method: 'PUT',
           headers: getAuthHeaders(),
           success: function() {
@@ -432,7 +432,7 @@
   function assignDriver(bookingId) {
       // Load available drivers and show modal
       $.ajax({
-          url: '/api/admin/drivers/available',
+          url: 'http://localhost:8080/api/admin/drivers/available',
           method: 'GET',
           headers: getAuthHeaders(),
           success: function(drivers) {
@@ -479,7 +479,7 @@
       }
 
       $.ajax({
-          url: `/api/admin/bookings/${bookingId}/driver/${driverId}`,
+          url: `http://localhost:8080/api/admin/bookings/${bookingId}/driver/${driverId}`,
           method: 'PUT',
           headers: getAuthHeaders(),
           success: function(updatedBooking) {

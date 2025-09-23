@@ -142,7 +142,7 @@
 
     function loadAvailableVehicles() {
         $.ajax({
-            url: '/api/vehicles/available',
+            url: 'http://localhost:8080/api/vehicles/available',
             method: 'GET',
             success: function(vehicles) {
                 displayVehicles(vehicles);

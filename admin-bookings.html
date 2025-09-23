@@ -219,7 +219,7 @@
 
     function loadAllBookings() {
         $.ajax({
-            url: '/api/bookings',
+            url: 'http://localhost:8080/api/bookings',
             method: 'GET',
             headers: getAuthHeaders(),
             success: function(bookings) {
@@ -499,7 +499,7 @@
         setLoadingState($statusCell.find('button.btn-outline-success'), true);
 
         $.ajax({
-            url: `/api/admin/bookings/${bookingId}/approve`,
+            url: `http://localhost:8080/api/admin/bookings/${bookingId}/approve`,
             method: 'PUT',
             headers: getAuthHeaders(),
             success: function(updatedBooking) {
@@ -531,7 +531,7 @@
         setLoadingState($statusCell.find('button.btn-outline-danger'), true);
 
         $.ajax({
-            url: `/api/admin/bookings/${bookingId}/reject`,
+            url: `http://localhost:8080/api/admin/bookings/${bookingId}/reject`,
             method: 'PUT',
             headers: getAuthHeaders(),
             success: function(updatedBooking) {
@@ -558,7 +558,7 @@
 
         // Load available drivers
         $.ajax({
-            url: '/api/admin/drivers/available',
+            url: 'http://localhost:8080/api/admin/drivers/available',
             method: 'GET',
             headers: getAuthHeaders(),
             success: function(drivers) {
@@ -585,7 +585,7 @@
         setLoadingState($('#assignDriverModal .btn-primary'), true);
 
         $.ajax({
-            url: `/api/admin/bookings/${bookingId}/driver/${driverId}`,
+            url: `http://localhost:8080/api/admin/bookings/${bookingId}/driver/${driverId}`,
             method: 'PUT',
             headers: getAuthHeaders(),
             success: function(updatedBooking) {

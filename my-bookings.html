@@ -109,7 +109,7 @@
 
     function loadUserBookings() {
         $.ajax({
-            url: '/api/bookings/user',
+            url: 'http://localhost:8080/api/bookings/user',
             method: 'GET',
             headers: getAuthHeaders(),
             success: function(bookings) {
@@ -287,7 +287,7 @@
         setLoadingState($btn, true);
 
         $.ajax({
-            url: `/api/bookings/${bookingId}/cancel`,
+            url: `http://localhost:8080/api/bookings/${bookingId}/cancel`,
             method: 'PUT',
             headers: getAuthHeaders(),
             success: function(updatedBooking) {

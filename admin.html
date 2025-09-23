@@ -420,7 +420,7 @@
     function loadDashboardStats() {
         // Total Bookings
         $.ajax({
-            url: '/api/bookings',
+            url: 'http://localhost:8080/api/bookings',
             method: 'GET',
             headers: getAuthHeaders(),
             success: function(bookings) {
@@ -433,7 +433,7 @@
 
                 // Total users
                 $.ajax({
-                    url: '/api/users',
+                    url: 'http://localhost:8080/api/users',
                     method: 'GET',
                     headers: getAuthHeaders(),
                     success: function(users) {
@@ -444,7 +444,7 @@
 
                 // Available vehicles
                 $.ajax({
-                    url: '/api/vehicles/available',
+                    url: 'http://localhost:8080/api/vehicles/available',
                     method: 'GET',
                     success: function(vehicles) {
                         $('#availableVehiclesStat').text(vehicles.length);
@@ -457,7 +457,7 @@
 
     function loadRecentBookings() {
         $.ajax({
-            url: '/api/bookings',
+            url: 'http://localhost:8080/api/bookings',
             method: 'GET',
             headers: getAuthHeaders(),
             success: function(bookings) {
@@ -593,7 +593,7 @@
         setLoadingState($btn, true);
 
         $.ajax({
-            url: '/api/vehicles',
+            url: 'http://localhost:8080/api/vehicles',
             method: 'POST',
             contentType: 'application/json',
             headers: getAuthHeaders(),
@@ -633,7 +633,7 @@
         setLoadingState($btn, true);
 
         $.ajax({
-            url: '/api/admin/drivers',
+            url: 'http://localhost:8080/api/admin/drivers',
             method: 'POST',
             contentType: 'application/json',
             headers: getAuthHeaders(),
@@ -661,7 +661,7 @@
         if (!confirm('Approve this booking?')) return;
 
         $.ajax({
-            url: `/api/admin/bookings/${id}/approve`,
+            url: `http://localhost:8080/api/admin/bookings/${id}/approve`,
             method: 'PUT',
             headers: getAuthHeaders(),
             success: function() {
@@ -679,7 +679,7 @@
         if (!confirm('Reject this booking?')) return;
 
         $.ajax({
-            url: `/api/admin/bookings/${id}/reject`,
+            url: `http://localhost:8080/api/admin/bookings/${id}/reject`,
             method: 'PUT',
             headers: getAuthHeaders(),
             success: function() {

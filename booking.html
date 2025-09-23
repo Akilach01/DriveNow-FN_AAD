@@ -66,7 +66,7 @@
 
       // Load vehicle details
       $.ajax({
-          url: `/api/vehicles/${vehicleId}`,
+          url: `http://localhost:8080/api/vehicles/${vehicleId}`,
           method: 'GET',
           success: function(vehicle) {
               displayVehicleDetails(vehicle);
@@ -280,7 +280,7 @@
       setLoadingState($btn, true);
 
       $.ajax({
-          url: '/api/bookings',
+          url: 'http://localhost:8080/api/bookings',
           method: 'POST',
           contentType: 'application/json',
           headers: getAuthHeaders(),

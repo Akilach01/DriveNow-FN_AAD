@@ -251,7 +251,7 @@
         }
 
         $.ajax({
-            url: `/api/users/${userId}`,
+            url: `http://localhost:8080/api/users/${userId}`,
             method: 'GET',
             headers: getAuthHeaders(),
             success: function(user) {
@@ -425,7 +425,7 @@
         delete submitData.roles;
 
         $.ajax({
-            url: '/api/users/me',
+            url: 'http://localhost:8080/api/users/me',
             method: 'PUT',
             contentType: 'application/json',
             headers: getAuthHeaders(),
@@ -468,7 +468,7 @@
 
         // Note: You'll need to implement password change endpoint or modify existing one
         $.ajax({
-            url: '/api/users/me/password', // You may need to add this endpoint
+            url: 'http://localhost:8080/api/users/me/password',
             method: 'PUT',
             contentType: 'application/json',
             headers: getAuthHeaders(),
@@ -507,7 +507,7 @@
 
     function loadBookingStats() {
         $.ajax({
-            url: '/api/bookings/user',
+            url: 'http://localhost:8080/api/bookings/user',
             method: 'GET',
             headers: getAuthHeaders(),
             success: function(bookings) {
